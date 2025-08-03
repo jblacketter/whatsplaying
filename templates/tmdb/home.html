@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - WhatsPlaying{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-bottom: 3rem;">
+    <h1>Welcome to WhatsPlaying</h1>
+    <p style="font-size: 1.2rem; color: #666;">Track what you want to watch across all your streaming services</p>
+    
+    <form method="get" action="{% url 'search' %}" style="margin-top: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+        <div style="display: flex; gap: 1rem;">
+            <input type="text" name="q" placeholder="Search for movies or TV shows..." 
+                   style="flex: 1; padding: 0.75rem; font-size: 1rem; border: 1px solid #ddd; border-radius: 4px;">
+            <button type="submit" class="btn">Search</button>
+        </div>
+    </form>
+</div>
+
+<h2>Trending This Week</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+    {% for item in trending_items %}
+        <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            {% if item.poster_path %}
+                <img src="{{ item.poster_path }}" alt="{{ item.title }}" 
+                     style="width: 100%; height: 225px; object-fit: cover;">
+            {% else %}
+                <div style="width: 100%; height: 225px; background: #ddd; display: flex; align-items: center; justify-content: center;">
+                    No Image
+                </div>
+            {% endif %}
+            <div style="padding: 0.75rem;">
+                <h4 style="margin: 0; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    {{ item.title }}
+                </h4>
+                <p style="margin: 0.25rem 0 0; color: #666; font-size: 0.8rem;">
+                    {{ item.media_type|title }}
+                    {% if item.release_date %}
+                        ({{ item.release_date|slice:":4" }})
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

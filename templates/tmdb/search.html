@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Search - WhatsPlaying{% endblock %}
+
+{% block content %}
+<h2>Search</h2>
+
+<form method="get" style="margin: 2rem 0;">
+    <div style="display: flex; gap: 1rem; max-width: 600px;">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search for movies or TV shows..." 
+               style="flex: 1; padding: 0.75rem; font-size: 1rem; border: 1px solid #ddd; border-radius: 4px;">
+        <button type="submit" class="btn">Search</button>
+    </div>
+</form>
+
+{% if query %}
+    <p>Search results for: <strong>{{ query }}</strong></p>
+{% endif %}
+
+<div style="margin-top: 2rem;">
+    {% for item in results %}
+        <div style="display: flex; gap: 1.5rem; background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+            <div style="flex-shrink: 0;">
+                {% if item.poster_path %}
+                    <img src="{{ item.poster_path }}" alt="{{ item.title }}" 
+                         style="width: 100px; height: 150px; object-fit: cover; border-radius: 4px;">
+                {% else %}
+                    <div style="width: 100px; height: 150px; background: #ddd; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                        No Image
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div style="flex: 1;">
+                <h3 style="margin: 0 0 0.5rem;">
+                    {{ item.title }}
+                    <span style="font-size: 0.9rem; color: #666; font-weight: normal;">
+                        ({{ item.media_type|title }})
+                    </span>
+                </h3>
+                
+                {% if item.release_date %}
+                    <p style="margin: 0 0 0.5rem; color: #666;">{{ item.release_date|slice:":4" }}</p>
+                {% endif %}
+                
+                {% if item.overview %}
+                    <p style="margin: 0 0 1rem; line-height: 1.5;">
+                        {{ item.overview|truncatewords:30 }}
+                    </p>
+                {% endif %}
+                
+                {% if item.available_on_user_services %}
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: #27ae60;">Available on your services:</strong>
+                        {{ item.available_on_user_services|join:", " }}
+                    </div>
+                {% endif %}
+                
+                {% if user.is_authenticated %}
+                    {% if item.in_watchlist %}
+                        <span style="color: #27ae60;">✓ In Watchlist</span>
+                    {% else %}
+                        <button onclick="addToWatchlist({{ item.id }}, '{{ item.media_type }}', '{{ item.title|escapejs }}', '{{ item.poster_path|default:'' }}', '{{ item.release_date|default:'' }}', '{{ item.overview|escapejs|default:'' }}')" 
+                                class="btn btn-secondary">
+                            Add to Watchlist
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-secondary">Login to Add</a>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        {% if query %}
+            <p>No results found for "{{ query }}"</p>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<script>
+function addToWatchlist(tmdbId, mediaType, title, posterPath, releaseDate, overview) {
+    fetch('{% url "add_to_watchlist" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            tmdb_id: tmdbId,
+            media_type: mediaType,
+            title: title,
+            poster_path: posterPath.replace('https://image.tmdb.org/t/p/w500', ''),
+            release_date: releaseDate,
+            overview: overview
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+</script>
+{% endblock %}

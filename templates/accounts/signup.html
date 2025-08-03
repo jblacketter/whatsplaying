@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up - WhatsPlaying{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 0 auto;">
+    <h2>Sign Up</h2>
+    <form method="post" style="margin-top: 2rem;">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Sign Up</button>
+        <a href="{% url 'login' %}" style="margin-left: 1rem;">Already have an account? Login</a>
+    </form>
+</div>
+
+<style>
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .helptext {
+        display: block;
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+    
+    ul.errorlist {
+        color: red;
+        list-style: none;
+        margin: 0.5rem 0;
+    }
+</style>
+{% endblock %}

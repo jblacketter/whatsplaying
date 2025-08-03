@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Advanced Search - WhatsPlaying{% endblock %}
+
+{% block content %}
+<h2>Search by Actors & Directors</h2>
+<p style="color: #666; margin-bottom: 2rem;">Find movies and TV shows featuring specific actors or directed by specific directors</p>
+
+<form method="get" style="background: white; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+    <div style="margin-bottom: 1.5rem;">
+        <label for="people" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+            Enter names (actors or directors):
+        </label>
+        <input type="text" 
+               id="people"
+               name="people" 
+               value="{{ people_query }}" 
+               placeholder='e.g. "Michael Caine and Demi Moore" or "Christopher Nolan"'
+               style="width: 100%; padding: 0.75rem; font-size: 1rem; border: 1px solid #ddd; border-radius: 4px;">
+        <small style="color: #666;">Separate multiple names with "and" or comma</small>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Content Type:</label>
+        <label style="margin-right: 1rem;">
+            <input type="radio" name="type" value="both" {% if search_type == 'both' %}checked{% endif %}>
+            Both
+        </label>
+        <label style="margin-right: 1rem;">
+            <input type="radio" name="type" value="movie" {% if search_type == 'movie' %}checked{% endif %}>
+            Movies Only
+        </label>
+        <label>
+            <input type="radio" name="type" value="tv" {% if search_type == 'tv' %}checked{% endif %}>
+            TV Shows Only
+        </label>
+    </div>
+    
+    <button type="submit" class="btn">Search</button>
+</form>
+
+{% if people_found %}
+    <div style="background: white; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem;">People Found:</h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            {% for person in people_found %}
+                <div style="display: flex; align-items: center; gap: 0.5rem; background: #f8f9fa; padding: 0.5rem; border-radius: 4px;">
+                    {% if person.profile_path %}
+                        <img src="{{ person.profile_path }}" alt="{{ person.name }}" 
+                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                    {% endif %}
+                    <div>
+                        <strong>{{ person.name }}</strong>
+                        <small style="display: block; color: #666;">{{ person.known_for_department }}</small>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+{% if people_query %}
+    {% if results %}
+        <h3>Results ({{ results|length }})</h3>
+        <div style="margin-top: 1rem;">
+            {% for item in results %}
+                <div style="display: flex; gap: 1.5rem; background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="flex-shrink: 0;">
+                        {% if item.poster_path %}
+                            <img src="{{ item.poster_path }}" alt="{{ item.title }}" 
+                                 style="width: 100px; height: 150px; object-fit: cover; border-radius: 4px;">
+                        {% else %}
+                            <div style="width: 100px; height: 150px; background: #ddd; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                                No Image
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        <h3 style="margin: 0 0 0.5rem;">
+                            {{ item.title }}
+                            <span style="font-size: 0.9rem; color: #666; font-weight: normal;">
+                                ({{ item.media_type|title }})
+                            </span>
+                        </h3>
+                        
+                        <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
+                            {% if item.release_date %}
+                                <span style="color: #666;">{{ item.release_date|slice:":4" }}</span>
+                            {% endif %}
+                            {% if item.vote_average %}
+                                <span style="color: #f39c12;">★ {{ item.vote_average|floatformat:1 }}/10</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if item.overview %}
+                            <p style="margin: 0 0 1rem; line-height: 1.5; color: #555;">
+                                {{ item.overview|truncatewords:30 }}
+                            </p>
+                        {% endif %}
+                        
+                        {% if item.available_on_user_services %}
+                            <div style="margin-bottom: 1rem;">
+                                <strong style="color: #27ae60;">✓ Available on your services:</strong>
+                                {{ item.available_on_user_services|join:", " }}
+                            </div>
+                        {% endif %}
+                        
+                        {% if user.is_authenticated %}
+                            {% if item.in_watchlist %}
+                                <span style="color: #27ae60;">✓ In Watchlist</span>
+                            {% else %}
+                                <button onclick="addToWatchlist({{ item.id }}, '{{ item.media_type }}', '{{ item.title|escapejs }}', '{{ item.poster_path|default:'' }}', '{{ item.release_date|default:'' }}', '{{ item.overview|escapejs|default:'' }}')" 
+                                        class="btn btn-secondary">
+                                    Add to Watchlist
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-secondary">Login to Add</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No results found. Try different names or check the spelling.</p>
+    {% endif %}
+{% endif %}
+
+<script>
+function addToWatchlist(tmdbId, mediaType, title, posterPath, releaseDate, overview) {
+    fetch('{% url "add_to_watchlist" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            tmdb_id: tmdbId,
+            media_type: mediaType,
+            title: title,
+            poster_path: posterPath.replace('https://image.tmdb.org/t/p/w500', ''),
+            release_date: releaseDate,
+            overview: overview
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}My Watchlist - WhatsPlaying{% endblock %}
+
+{% block content %}
+<h2>My Watchlist</h2>
+
+<div style="margin-top: 2rem;">
+    <!-- Priority To Watch Section -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; margin-bottom: 3rem;">
+        <h3 style="color: white; margin: 0 0 1.5rem; font-size: 1.5rem;">📺 To Watch ({{ want_to_watch.count }})</h3>
+        {% if want_to_watch %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
+                {% for item in want_to_watch %}
+                    <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        {% if item.get_poster_url %}
+                            <img src="{{ item.get_poster_url }}" alt="{{ item.title }}" 
+                                 style="width: 100%; height: 210px; object-fit: cover;">
+                        {% else %}
+                            <div style="width: 100%; height: 210px; background: #ddd; display: flex; align-items: center; justify-content: center;">
+                                No Image
+                            </div>
+                        {% endif %}
+                        
+                        <div style="padding: 0.75rem;">
+                            <h4 style="margin: 0 0 0.25rem; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ item.title }}
+                            </h4>
+                            <p style="margin: 0; color: #666; font-size: 0.75rem;">
+                                {{ item.get_media_type_display }}
+                            </p>
+                            
+                            <div style="margin-top: 0.5rem; display: flex; gap: 0.25rem;">
+                                <form method="post" action="{% url 'update_watchlist_status' item.id %}" style="flex: 1;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="watching">
+                                    <button type="submit" style="width: 100%; padding: 0.25rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
+                                        Start
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'remove_from_watchlist' item.id %}" style="flex: 1;">
+                                    {% csrf_token %}
+                                    <button type="submit" style="width: 100%; padding: 0.25rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
+                                        Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: white; text-align: center; padding: 2rem;">
+                Your watch list is empty. Start adding movies and TV shows you want to watch!<br>
+                <a href="{% url 'search' %}" style="color: white; text-decoration: underline; margin-top: 1rem; display: inline-block;">
+                    Search for content →
+                </a>
+            </p>
+        {% endif %}
+    </div>
+    
+    <!-- Currently Watching Section -->
+    <h3>Currently Watching ({{ watching.count }})</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin: 1rem 0 2rem;">
+        {% for item in watching %}
+            {% include 'watchlist/item_card.html' with item=item %}
+        {% empty %}
+            <p style="color: #666;">No items in this category</p>
+        {% endfor %}
+    </div>
+    
+    <!-- Watched Section -->
+    <h3>Watched ({{ watched.count }})</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin: 1rem 0 2rem;">
+        {% for item in watched %}
+            {% include 'watchlist/item_card.html' with item=item %}
+        {% empty %}
+            <p style="color: #666;">No items in this category</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

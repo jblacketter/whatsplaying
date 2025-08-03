@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - WhatsPlaying{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 0 auto;">
+    <h2>Login</h2>
+    <form method="post" style="margin-top: 2rem;">
+        {% csrf_token %}
+        <div style="margin-bottom: 1rem;">
+            <label for="{{ form.username.id_for_label }}" style="display: block; margin-bottom: 0.5rem;">Username:</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+                <div style="color: red; margin-top: 0.5rem;">{{ form.username.errors }}</div>
+            {% endif %}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <label for="{{ form.password.id_for_label }}" style="display: block; margin-bottom: 0.5rem;">Password:</label>
+            {{ form.password }}
+            {% if form.password.errors %}
+                <div style="color: red; margin-top: 0.5rem;">{{ form.password.errors }}</div>
+            {% endif %}
+        </div>
+        {% if form.non_field_errors %}
+            <div style="color: red; margin-bottom: 1rem;">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <button type="submit" class="btn">Login</button>
+        <a href="{% url 'signup' %}" style="margin-left: 1rem;">Don't have an account? Sign up</a>
+    </form>
+</div>
+
+<style>
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+</style>
+{% endblock %}
